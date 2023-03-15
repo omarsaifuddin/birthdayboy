@@ -10,11 +10,10 @@ intents.dm_messages = True
 intents.guild_messages = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-#can change the prefix to whatever you want.
+bot.remove_command('help')
 config_filename = "config.json"
 birthdays_filename = "birthdays.json"
-#birthdays.json and config.json can be completely empty *.json files to start.
-#By completeley empty, I mean only containing {}.
+#birthdays.json and config.json can be otherwise completely empty *.json files, only containing {}
 
 def load_bot_token():
     with open("credentials.json", "r") as f:
@@ -24,7 +23,7 @@ def load_bot_token():
 {
     "bot_token": "YOUR_BOT_TOKEN_HERE"
 }
-Example files are included in the repository.'''
+'''
 def load_birthdays():
     with open(birthdays_filename, "r") as f:
         return json.load(f)
@@ -58,14 +57,19 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command()
-async def set_birthday_channel(ctx, channel: discord.TextChannel):
+async def setchannel(ctx, channel: discord.TextChannel):
     if not ctx.message.author.guild_permissions.administrator:
         await ctx.send("You must be an administrator to set the birthday channel.")
         return
 
     guild_id = str(ctx.guild.id)
     config = load_config()
-    config[guild_id] = channel.id
+    
+    # Ensure the guild_id key exists and is a dictionary
+    if guild_id not in config or not isinstance(config[guild_id], dict):
+        config[guild_id] = {}
+
+    config[guild_id]["channel_id"] = channel.id
     save_config(config)
     await ctx.send(f"Birthday channel set to {channel.mention}")
 
@@ -94,7 +98,9 @@ async def birthday(ctx, date_str: str):
     if date.strftime("%m%d") == datetime.datetime.now().strftime("%m%d"):
         guild_id = str(ctx.guild.id)
         config = load_config()
-        guild_config = config.get(guild_id, {})
+        guild_config = config.get(guild_id)
+        if not isinstance(guild_config, dict):
+            guild_config = {}
         
         channel_id = guild_config.get("channel_id")
         if channel_id:
@@ -116,9 +122,10 @@ async def birthday(ctx, date_str: str):
 @bot.command()
 async def help(ctx):
     embed = discord.Embed(title="Bot Commands", description="List of available commands", color=0x42f56c)
-    embed.add_field(name="!set_birthday_channel #channel", value="Set the channel where birthday announcements are sent (Requires Administrative Privileges).", inline=False)
-    embed.add_field(name="!birthday MMDD", value="Sets your birthday. If you provide a year, the bot will ignore it and advise you not to tell it that. I don't wanna know!", inline=False)
-    embed.add_field(name="!help", value="Displays this help message, but you already knew that, didn't you?", inline=False)
+    embed.add_field(name=f"{bot.command_prefix}setchannel #channel", value="Set the channel where birthday announcements are sent. \n(Requires Administrative Privileges.)", inline=False)
+    embed.add_field(name=f"{bot.command_prefix}birthday MMDD", value="Sets your birthday. If you provide a year, the bot will ignore it and advise you not to tell it that. I don't wanna know!", inline=False)
+    embed.add_field(name=f"{bot.command_prefix}mentionall true/false", value="Toggles whether or not the bot mentions everyone or not. \nFor your sanity, this behaviour is disabled by default. (Requires Administrative Privileges.)", inline=False)
+    embed.add_field(name=f"{bot.command_prefix}help", value="Displays this help message, but you already knew that, didn't you?", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -126,7 +133,7 @@ async def simonsays(ctx, *, message: str):
     await ctx.send(message)
 
 @bot.command()
-async def set_everyone_mention(ctx, value: bool):
+async def mentionall(ctx, value: bool):
     if not ctx.message.author.guild_permissions.administrator:
         await ctx.send("You must be an administrator to change this setting!")
         return
@@ -134,23 +141,28 @@ async def set_everyone_mention(ctx, value: bool):
     guild_id = str(ctx.guild.id)
     config = load_config()
 
-    if guild_id not in config:
+    # Ensure the guild_id key exists and is a dictionary
+    if guild_id not in config or not isinstance(config[guild_id], dict):
         config[guild_id] = {}
 
     config[guild_id]["everyone_mention"] = value
     save_config(config)
     await ctx.send(f"Everyone mention set to {value}.")
-
+    
 @tasks.loop(hours=24)
 async def announce_birthdays():
     today_str = datetime.datetime.now().strftime("%m%d")
     birthdays = load_birthdays()
     config = load_config()
+    print(f"Config: {config}")  # Add this line for debugging
 
     for guild in bot.guilds:
         guild_id = str(guild.id)
-        guild_config = config.get(guild_id, {})
-        
+        guild_config = config.get(guild_id)
+        print(f"Guild ID: {guild_id}, Guild Config: {guild_config}")  # Add this line for debugging
+        if not isinstance(guild_config, dict):
+            guild_config = {}
+
         channel_id = guild_config.get("channel_id")
         if channel_id:
             channel = bot.get_channel(channel_id)
@@ -159,7 +171,6 @@ async def announce_birthdays():
 
         if not channel:
             continue
-
         everyone_mention = guild_config.get("everyone_mention", False)
 
         for member in guild.members:
@@ -169,5 +180,4 @@ async def announce_birthdays():
                 if everyone_mention:
                     message = "@everyone, " + message
                 await channel.send(message)
-
 bot.run(load_bot_token())
