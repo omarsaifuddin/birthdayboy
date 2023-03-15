@@ -10,10 +10,11 @@ intents.dm_messages = True
 intents.guild_messages = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-
+#can change the prefix to whatever you want.
 config_filename = "config.json"
 birthdays_filename = "birthdays.json"
-#birthdays.json and config.json can be otherwise completely empty *.json files, only containing {}
+#birthdays.json and config.json can be completely empty *.json files to start.
+#By completeley empty, I mean only containing {}.
 
 def load_bot_token():
     with open("credentials.json", "r") as f:
@@ -23,7 +24,7 @@ def load_bot_token():
 {
     "bot_token": "YOUR_BOT_TOKEN_HERE"
 }
-'''
+Example files are included in the repository.'''
 def load_birthdays():
     with open(birthdays_filename, "r") as f:
         return json.load(f)
