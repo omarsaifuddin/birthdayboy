@@ -135,9 +135,10 @@ async def birthday(ctx, date_str: str):
         if channel_id:
             channel = bot.get_channel(channel_id)
         else:
-            channel = discord.utils.get(ctx.guild.text_channels, name='announcements')
+            channel = discord.utils.get(ctx.guild.text_channels, name='birthdays')
 
 
+            channel = discord.utils.get(ctx.guild.text_channels, name='birthdays')
         
         role_mention = guild_config.get("role_mention")
         if channel:
@@ -211,7 +212,7 @@ async def announce_birthdays():
         if channel_id:
             channel = bot.get_channel(channel_id)
         else:
-            channel = discord.utils.get(guild.text_channels, name='announcements')
+            channel = discord.utils.get(guild.text_channels, name='birthdays')
 
         if not channel:
             continue
