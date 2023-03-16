@@ -47,6 +47,7 @@ async def on_ready():
     announce_birthdays.start()
 
 @bot.event
+
 async def on_message(message):
     if message.author == bot.user:
         return
@@ -57,6 +58,33 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command()
+
+#When called, sets a role to the "role_id" config.
+async def setrole(ctx, role: discord.Role):
+    role_id = role.id   
+    if not ctx.message.author.guild_permissions.administrator:
+        await ctx.send("You must be an administrator to set the role ping.")
+        return
+    guild_id = str(ctx.guild.id)
+    config = load_config()
+    #Adding role mentions
+    config[guild_id]["role_id"] = role_id
+    config[guild_id]["role_mention"] = True
+    save_config(config)
+
+#If the role_id entered is empty, it resets "role_mention" boolean to False
+@setrole.error
+async def setrole_error(ctx, error):
+    if isinstance(error, commands.BadArgument):
+        await ctx.send('Invalid role! Please mention a valid role.')
+
+    elif isinstance(error, commands.MissingRequiredArgument):
+        guild_id = str(ctx.guild.id)
+        config = load_config()
+        config[guild_id]["role_mention"] = False
+        await ctx.send('Role mention removed from message')
+
+@bot.command()
 async def setchannel(ctx, channel: discord.TextChannel):
     if not ctx.message.author.guild_permissions.administrator:
         await ctx.send("You must be an administrator to set the birthday channel.")
@@ -64,13 +92,14 @@ async def setchannel(ctx, channel: discord.TextChannel):
 
     guild_id = str(ctx.guild.id)
     config = load_config()
-    
+
     # Ensure the guild_id key exists and is a dictionary
     if guild_id not in config or not isinstance(config[guild_id], dict):
         config[guild_id] = {}
 
     config[guild_id]["channel_id"] = channel.id
-    save_config(config)
+
+    
     await ctx.send(f"Birthday channel set to {channel.mention}")
 
 #await ctx.author.send("Your birth year has been stripped from our database. Please be careful with who you share your information with online.")
@@ -107,13 +136,29 @@ async def birthday(ctx, date_str: str):
             channel = bot.get_channel(channel_id)
         else:
             channel = discord.utils.get(ctx.guild.text_channels, name='birthdays')
+
+
+            channel = discord.utils.get(ctx.guild.text_channels, name='birthdays')
         
+        role_mention = guild_config.get("role_mention")
         if channel:
             everyone_mention = guild_config.get("everyone_mention", False)
 
             message = "It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!"
+            
+                #Checks if role_mention = True
+            if role_mention:
+                #Pulls role_id from JSON
+                role_id = guild_config.get("role_id")
+                #Checks if it's not empty - this should temporarily resolve if the config is empty
+                if role_id is not None:
+
+                    message = ", " + message
+                    message = f'<@&{role_id}>, {message}'
+
             if everyone_mention:
                 message = "@everyone, " + message
+            
             await channel.send(message)
 
     await ctx.send("Birthday saved.")
@@ -173,11 +218,28 @@ async def announce_birthdays():
             continue
         everyone_mention = guild_config.get("everyone_mention", False)
 
+        
+        role_mention = guild_config.get("role_mention", False)
+        
         for member in guild.members:
             user_id = str(member.id)
             if user_id in birthdays and birthdays[user_id] == today_str:
                 message = "It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!"
+
+                #Checks if role_mention = True
+                if role_mention:
+                    #Pulls role_id from JSON
+                    role_id = guild_config.get("role_id")
+                    #Checks if it's not empty - this should temporarily resolve if the config is empty
+                    if role_id is not None:
+                        message = ", " + message
+                        message = f'<@&{role_id}>, {message}'
+
                 if everyone_mention:
+
                     message = "@everyone, " + message
+
                 await channel.send(message)
+
+
 bot.run(load_bot_token())
