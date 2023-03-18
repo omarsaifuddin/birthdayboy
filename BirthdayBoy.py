@@ -103,6 +103,20 @@ async def setmessage(ctx, *, message_content: str):
     config[guild_id]["custom_message"] = message_content
     save_config(config)
 
+#If the message entered is empty, it resets the message to the default. 
+@setmessage.error
+async def setmessage_error(ctx, error):
+    if isinstance(error, commands.BadArgument):
+        await ctx.send('Invalid message! Please enter a valid birthday message.')
+
+    elif isinstance(error, commands.MissingRequiredArgument):
+        guild_id = str(ctx.guild.id)
+        config = load_config()
+        default_message = "It's {user_mention}'s birthday! Happy Birthday {user_mention}!"
+        config[guild_id]["custom_message"] = default_message
+        await ctx.send('Reset message to default')
+
+
 @bot.command()
 async def setchannel(ctx, channel: discord.TextChannel):
     if not ctx.message.author.guild_permissions.administrator:
@@ -117,8 +131,6 @@ async def setchannel(ctx, channel: discord.TextChannel):
         config[guild_id] = {}
 
     config[guild_id]["channel_id"] = channel.id
-
-    
     await ctx.send(f"Birthday channel set to {channel.mention}")
 
 #await ctx.author.send("Your birth year has been stripped from our database. Please be careful with who you share your information with online.")
@@ -164,7 +176,7 @@ async def birthday(ctx, date_str: str):
             #Pings users assigned to the {user_mention} string that was called
             #Default message is set to:
             #"It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!"
-            message = guild_config.get("custom_message", "It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!")
+            message = guild_config.get("custom_message", "It's {user_mention}'s birthday! Happy Birthday {user_mention}!")
             message = message.format(user_mention=ctx.author.mention)
 
             ###message = "It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!"
@@ -191,10 +203,12 @@ async def birthday(ctx, date_str: str):
 async def help(ctx):
     embed = discord.Embed(title="Bot Commands", description="List of available commands", color=0x42f56c)
     embed.add_field(name=f"{bot.command_prefix}setchannel #channel", value="Set the channel where birthday announcements are sent. \n(Requires Administrative Privileges.)", inline=False)
+    embed.add_field(name=f"{bot.command_prefix}setmessage", value="Set the custom message when announcing birthdays. Where a user's name would be included, type '{{user_mention}}. \n(Requires Administrative Privileges.)", inline = False)
     embed.add_field(name=f"{bot.command_prefix}birthday MMDD", value="Sets your birthday. If you provide a year, the bot will ignore it and advise you not to tell it that. I don't wanna know!", inline=False)
     embed.add_field(name=f"{bot.command_prefix}mentionall true/false", value="Toggles whether or not the bot mentions everyone or not. \nFor your sanity, this behaviour is disabled by default. (Requires Administrative Privileges.)", inline=False)
     embed.add_field(name=f"{bot.command_prefix}help", value="Displays this help message, but you already knew that, didn't you?", inline=False)
     await ctx.send(embed=embed)
+
 
 @bot.command()
 async def simonsays(ctx, *, message: str):
@@ -253,7 +267,7 @@ async def announce_birthdays():
                 #Default message is set to:
                 #"It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!"
                 #
-                message = guild_config.get("custom_message", "It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!")
+                message = guild_config.get("custom_message", "It's {user_mention}'s birthday! Happy Birthday {user_mention}!")
                 message = message.format(user_mention=member.mention)
 
                 ###message = "It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!"
