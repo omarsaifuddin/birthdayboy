@@ -41,13 +41,13 @@ def save_config(config):
         json.dump(config, f)
 
 
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user.name}")
     announce_birthdays.start()
 
 @bot.event
-
 async def on_message(message):
     if message.author == bot.user:
         return
@@ -58,7 +58,6 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command()
-
 #When called, sets a role to the "role_id" config.
 async def setrole(ctx, role: discord.Role):
     role_id = role.id   
@@ -83,6 +82,26 @@ async def setrole_error(ctx, error):
         config = load_config()
         config[guild_id]["role_mention"] = False
         await ctx.send('Role mention removed from message')
+
+#Sets a custom birthday message from a text command
+#~~~~
+#To include a ping that mentions a user, format 
+#the custom message with {user_mention} to ping the 
+#user who's birthday is being called. e.g., for the 
+#default message, use:
+#!setmessage It's {user_mention}'s birthday! Happy Birthday {user_mention}!
+#~~~
+@bot.command()
+async def setmessage(ctx, *, message_content: str):
+
+    if not ctx.message.author.guild_permissions.administrator:
+        await ctx.send("You must be an administrator to set the birthday message.")
+        return
+    guild_id = str(ctx.guild.id)
+    config = load_config()
+    await ctx.send(f"Custom message saved: {message_content}")
+    config[guild_id]["custom_message"] = message_content
+    save_config(config)
 
 @bot.command()
 async def setchannel(ctx, channel: discord.TextChannel):
@@ -144,7 +163,14 @@ async def birthday(ctx, date_str: str):
         if channel:
             everyone_mention = guild_config.get("everyone_mention", False)
 
-            message = "It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!"
+            #Accesses custom message from "custom_role" in config
+            #Pings users assigned to the {user_mention} string that was called
+            #Default message is set to:
+            #"It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!"
+            message = guild_config.get("custom_message", "It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!")
+            message = message.format(user_mention=ctx.author.mention)
+
+            ###message = "It's " + ctx.author.mention + "'s birthday! Happy Birthday " + ctx.author.mention + "!"
             
                 #Checks if role_mention = True
             if role_mention:
@@ -224,7 +250,16 @@ async def announce_birthdays():
         for member in guild.members:
             user_id = str(member.id)
             if user_id in birthdays and birthdays[user_id] == today_str:
-                message = "It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!"
+
+                #Accesses custom message from "custom_role" in config
+                #Pings users assigned to the {user_mention} string that was called
+                #Default message is set to:
+                #"It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!"
+                #
+                message = guild_config.get("custom_message", "It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!")
+                message = message.format(user_mention=member.mention)
+
+                ###message = "It's " + member.mention + "'s birthday! Happy Birthday " + member.mention + "!"
 
                 #Checks if role_mention = True
                 if role_mention:
