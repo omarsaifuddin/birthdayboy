@@ -156,9 +156,6 @@ async def birthday(ctx, date_str: str):
         else:
             channel = discord.utils.get(ctx.guild.text_channels, name='birthdays')
 
-
-            channel = discord.utils.get(ctx.guild.text_channels, name='birthdays')
-        
         role_mention = guild_config.get("role_mention")
         if channel:
             everyone_mention = guild_config.get("everyone_mention", False)
