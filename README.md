@@ -5,7 +5,7 @@ A Discord bot developed using discord.py that stores and announces user birthday
 ## Working Example
 To use BirthdayBoy in your own server, refer to the invite link below.
 
-https://discord.com/oauth2/authorize?client_id=1372338259644125244
+https://discord.com/oauth2/authorize?client_id=410957284466753537
 
 ## Features
 
