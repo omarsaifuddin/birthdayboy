@@ -97,8 +97,12 @@ async def set_birthday_cmd(ctx, birthday_str: str = None):
         await ctx.send("Invalid birthday format. Please use MMDD or DDMM format (e.g., 1225 for December 25).")
         return
     
-    # Send privacy warning
-    await ctx.author.send(PRIVACY_WARNING)
+    # Send privacy warning - handle users with DMs disabled
+    try:
+        await ctx.author.send(PRIVACY_WARNING)
+    except discord.errors.Forbidden:
+        # User has DMs disabled, send the message in the channel instead
+        await ctx.send(f"⚠️ **{ctx.author.mention}**: I couldn't send you a privacy warning via DM because you have DMs disabled.\n\nPlease note that by setting your birthday, you're sharing personal information. You can disable announcements at any time using `!toggleannounce` and `!toggledms`.")
     
     # Set the birthday in the database
     if set_birthday(ctx.author.id, ctx.guild.id, parsed_birthday):
@@ -152,7 +156,11 @@ async def set_birth_year_cmd(ctx, year_str: str = None):
         return
     
     # Send privacy warning
-    await ctx.author.send(PRIVACY_WARNING + "\nAdding your birth year allows the bot to calculate your age. Use `!toggleshareage` to control whether your age is shared in birthday announcements.")
+    try:
+        await ctx.author.send(PRIVACY_WARNING + "\nAdding your birth year allows the bot to calculate your age. Use `!toggleshareage` to control whether your age is shared in birthday announcements.")
+    except discord.errors.Forbidden:
+        # User has DMs disabled, send the message in the channel instead
+        await ctx.send(f"⚠️ **{ctx.author.mention}**: I couldn't send you a privacy warning via DM because you have DMs disabled.\n\nPlease note that adding your birth year allows the bot to calculate your age. You can control whether your age is shared using `!toggleshareage`.")
     
     # Set the birth year in the database
     if set_birth_year(ctx.author.id, ctx.guild.id, year):
