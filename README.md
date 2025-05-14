@@ -2,6 +2,11 @@
 
 A Discord bot developed using discord.py that stores and announces user birthdays across Discord servers and via direct messages (DMs).
 
+## Working Example
+To use BirthdayBoy in your own server, refer to the invite link below.
+
+https://discord.com/oauth2/authorize?client_id=1372338259644125244
+
 ## Features
 
 - **Birthday Registration**: Users can register their birthday via `!setbirthday` command
@@ -9,7 +14,7 @@ A Discord bot developed using discord.py that stores and announces user birthday
 - **Privacy Controls**: Users can toggle announcements, DMs, and age sharing
 - **Administrative Controls**: Server admins can configure announcement channels, command channels, and more
 
-## Requirements
+## Self-Hosting Requirements
 
 - Python 3.8+
 - PostgreSQL database
