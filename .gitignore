@@ -1,0 +1,7 @@
+#git
+.env
+.env.local
+#docker
+.dockerignore
+#fuck you and your ugly condo
+cursor/
