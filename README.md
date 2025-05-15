@@ -96,11 +96,10 @@ Before running the bot, make sure to:
 - Separate databases are used for development, testing, and production environments
 - Testing can be done with Python's testing framework
 
-## Security and Privacy
+## Privacy
 
-- Users are warned when sharing personal information
 - Birth year and age sharing are opt-in only
-- User data is stored securely in a PostgreSQL database
+- User data is stored in a PostgreSQL database
 
 ## License
 
