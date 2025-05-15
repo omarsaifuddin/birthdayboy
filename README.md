@@ -76,7 +76,7 @@ Before running the bot, make sure to:
 ## Commands
 
 ### User Commands
-- `!setbirthday MMDD` - Set your birthday (MMDD or DDMM format)
+- `!setbirthday MMDD` - Set your birthday (MMDD format)
 - `!setbirthyear YYYY` - Add your birth year (optional)
 - `!toggledms` - Toggle birthday DMs
 - `!toggleannounce` - Toggle server announcements
